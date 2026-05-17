@@ -30,8 +30,7 @@ database.connect((err) => {
 //Veri ekleme
 app.post('/api/kullanici-ekle', (req, res) => {
        const { ad, soyad, eposta, telefonNumarasi, sifre } = req.body; // Verilerin değişkene atandığı yer.
-       const saltRounds = 10;
-       const hashliSifre = await bcrypt.hashSync(sifre, saltRounds);
+       const hashliSifre = await bcrypt.hashSync(sifre, 10);
        const sql = 'INSERT INTO accountInformation (ad, soyad, eposta, telefonNumarasi, sifre) VALUES (?, ?, ?, ?, ?)'; // ? işaretleri güvenlik içindir.
 
        
