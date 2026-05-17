@@ -1,6 +1,7 @@
 const express = require('express');
 const mysql = require('mysql2');
 const cors = require('cors'); //Al-ver yapabilmek için gerekli olan kod.
+const bcrypt = require('bcrypt'); //Şifreleme için
 
 // Express kütüphanesini çalıştırıp app adında bir sunucu değişkeni oluşturuyor. Bütün değişkenler app'e yazılıyor.
 const app = express();
@@ -28,8 +29,12 @@ database.connect((err) => {
 
 //Veri ekleme
 app.post('/api/kullanici-ekle', (req, res) => {
-       const { ad, soyad, eposta, telefonNumarasi } = req.body; // Verilerin değişkene atandığı yer.
-       const sql = 'INSERT INTO accountInformation (ad, soyad, eposta, telefonNumarasi) VALUES (?, ?, ?, ?)'; // ? işaretleri güvenlik içindir.
+       const { ad, soyad, eposta, telefonNumarasi, sifre } = req.body; // Verilerin değişkene atandığı yer.
+       const saltRounds = 10;
+       const hashliSifre = await bcrypt.hash(sifre, saltRounds);
+       const sql = 'INSERT INTO accountInformation (ad, soyad, eposta, telefonNumarasi, sifre) VALUES (?, ?, ?, ?, ?)'; // ? işaretleri güvenlik içindir.
+
+       
 
        database.query(sql, [ad, soyad, eposta, telefonNumarasi], (err, result) => { 
             if(err){
@@ -41,6 +46,39 @@ app.post('/api/kullanici-ekle', (req, res) => {
 
        });
     });
+
+app.post('/api/giris-yap', (req, res) => {
+    const {telefonNumarasi, sifre} = req.body;
+    const sql = 'SELECT * FROM accountInformation WHERE telefonNumarasi = ?';
+
+    database(sql, [telefonNumarasi], async (err, results) =>{
+        if(err){
+            console.error(err);
+            return res.status(500).json({ mesaj: 'Giriş işlemi sırasında hata oluştu.'});
+        }
+        if (results.length === 0){
+            return res.status(401).json({ mesaj: 'E-posta veya şifre hatalı.'});
+        }
+
+        const kullanici = results[0];
+
+        const sifreDogrulama = await bcrypt.compare(sifre, kullanici.sifre);
+        if(!sifreDogrulama){
+            return res.status(401).json({ mesaj: 'E-posta veya şifre hatalı.'});
+        }
+
+        res.status(200).json({
+            mesaj: 'Giriş başarıyla tamamlandı.',
+            kullanici:{
+                id: kullanici.id,
+                ad: kullanici.ad,
+                soyad: kullanici.soyad,
+                eposta: kullanici.eposta,
+                telefonNumarasi: kullanici.telefonNumarasi
+            }
+        });
+    });
+});
 
 //GET işleminin yapıldığı yer.
 app.get('/api/kullanicilar', (req, res) => {
