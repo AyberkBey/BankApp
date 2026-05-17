@@ -43,7 +43,7 @@ app.post('/api/kullanici-ekle', (req, res) => {
     });
 
 //GET işleminin yapıldığı yer.
-app.post('/api/kullanicilar', (req, res) => {
+app.get('/api/kullanicilar', (req, res) => {
     const sql = 'SELECT * FROM accountInformation';
 
     database.query(sql, (err, results) =>{
