@@ -1,7 +1,7 @@
 const express = require('express');
 const mysql = require('mysql2');
 const cors = require('cors'); //Al-ver yapabilmek için gerekli olan kod.
-const bcrypt = require('bcrypt'); //Şifreleme için
+const bcrypt = require('bcryptjs'); //Şifreleme için
 
 // Express kütüphanesini çalıştırıp app adında bir sunucu değişkeni oluşturuyor. Bütün değişkenler app'e yazılıyor.
 const app = express();
