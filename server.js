@@ -31,12 +31,12 @@ database.connect((err) => {
 app.post('/api/kullanici-ekle', (req, res) => {
        const { ad, soyad, eposta, telefonNumarasi, sifre } = req.body; // Verilerin değişkene atandığı yer.
        const saltRounds = 10;
-       const hashliSifre = await bcrypt.hash(sifre, saltRounds);
+       const hashliSifre = await bcrypt.hashSync(sifre, saltRounds);
        const sql = 'INSERT INTO accountInformation (ad, soyad, eposta, telefonNumarasi, sifre) VALUES (?, ?, ?, ?, ?)'; // ? işaretleri güvenlik içindir.
 
        
 
-       database.query(sql, [ad, soyad, eposta, telefonNumarasi], (err, result) => { 
+       database.query(sql, [ad, soyad, eposta, telefonNumarasi, hashliSifre], (err, result) => { 
             if(err){
                 console.error(err);
                 return res.status(500).json({  mesaj: 'Kayıt eklenemedi.', hata: err.message});
@@ -51,7 +51,7 @@ app.post('/api/giris-yap', (req, res) => {
     const {telefonNumarasi, sifre} = req.body;
     const sql = 'SELECT * FROM accountInformation WHERE telefonNumarasi = ?';
 
-    database(sql, [telefonNumarasi], async (err, results) =>{
+    database.query(sql, [telefonNumarasi], async (err, results) =>{
         if(err){
             console.error(err);
             return res.status(500).json({ mesaj: 'Giriş işlemi sırasında hata oluştu.'});
@@ -62,7 +62,7 @@ app.post('/api/giris-yap', (req, res) => {
 
         const kullanici = results[0];
 
-        const sifreDogrulama = await bcrypt.compare(sifre, kullanici.sifre);
+        const sifreDogrulama = await bcrypt.compareSync(sifre, kullanici.sifre);
         if(!sifreDogrulama){
             return res.status(401).json({ mesaj: 'E-posta veya şifre hatalı.'});
         }
